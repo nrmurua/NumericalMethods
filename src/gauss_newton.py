@@ -1,6 +1,7 @@
 import numpy as np
 from sympy import symbols, lambdify,  parse_expr
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 def create_system(n):
     print('Indicate variables as x1, x2, ..., and t for time') # Print de instruccion
@@ -47,6 +48,15 @@ def gauss_newton(F, x0, t, observed_data, maxit=100000, tol=1e-10):
       return x, it+1 # Retorna los valores aproximados de los parametros x y el numero de iteraciones realizadas
     
   raise ValueError("Gauss-Newton did not converge.") # En caso de llegar a este punto, no hubo convergencia
+
+def calculate_r_squared(observed_data, model_predictions):
+  mean_observed = np.mean(observed_data)
+    
+  sst = np.sum((observed_data - mean_observed)**2)
+  sse = np.sum((observed_data - model_predictions)**2)
+    
+  r_squared = 1 - (sse / sst)
+  return r_squared
 
 def read_data(src):
   filename = src # Copia el nombre del archivo txt que contiene los datos
@@ -115,10 +125,24 @@ if __name__ == '__main__':
     observed_data = cols_vect[0]
     fitted_model = F(x, t)
 
-    plt.scatter(t, observed_data, label='Observed Data')
-    plt.plot(t, fitted_model, label='Fitted Model', color='red')
+    plt.plot(t, cols_vect[0], label='Observed Data', marker='o')
+    plt.plot(t, F(x, t), label='Model Predictions', marker='x')
+
+    # Connect points with red lines
+    for i in range(len(t)):
+        plt.plot([t[i], t[i]], [cols_vect[0][i], F(x, t)[i]], 'salmon', linestyle='-', linewidth=0.8)
+
+        error = np.abs(cols_vect[0][i] - F(x, t)[i])
+        plt.text(t[i], cols_vect[0][i] -0.5, f'Error: {error:.2f}', color='black', fontsize=10, verticalalignment='bottom')
+
+    r_squared_value = calculate_r_squared(observed_data, fitted_model)
+    plt.text(0.1, 0.9, f'$R^2 = {r_squared_value:.4f}$', transform=plt.gca().transAxes, fontsize=12)
+
+    # Add labels, legend, etc.
     plt.xlabel('Time')
-    plt.ylabel('Observations')
+    plt.ylabel('Values')
     plt.legend()
-    plt.title('Observed Data and Fitted Model')
+    plt.title('Observed Data vs Model Predictions')
+
+    # Show the plot
     plt.show()
